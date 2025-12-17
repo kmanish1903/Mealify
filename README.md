@@ -48,3 +48,25 @@ The app fetches data from **TheMealDB API** and is designed with a clean UI, smo
 
 ## 📂 Project Structure
 
+```bash
+Mealify/
+├── src/
+│   ├── components/          # Reusable UI components
+│   │   └── MealCard.js
+│   │
+│   ├── screens/             # Application screens
+│   │   ├── HomeScreen.js
+│   │   ├── RecipeDetailsScreen.js
+│   │   └── FavoritesScreen.js
+│   │
+│   ├── navigation/          # Navigation configuration
+│   │   └── AppNavigator.js
+│   │
+│   ├── services/            # API calls & external services
+│   │   └── api.js
+│   │
+│   └── App.js               # Root application component
+│
+├── package.json             # Project dependencies & scripts
+├── babel.config.js          # Babel configuration
+├── README.md                # Project documentation
