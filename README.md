@@ -7,6 +7,7 @@
   </p>
 </div>
 
+
 ---
 
 ## 📌 Project Overview
@@ -19,6 +20,10 @@ The app fetches data from **TheMealDB API** and is designed with a clean UI, smo
 **Task by:** Dev Innovation Lab
 
 ---
+
+## 🚀 Live Demo
+
+🔗 **Live Website:** https://mealify-recipe.vercel.app/
 
 ## 🚀 Features
 
