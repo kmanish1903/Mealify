@@ -1,0 +1,5 @@
+{
+  "name": "Mealify",
+  "description": "A premium recipe finder application powered by TheMealDB and enhanced with Google Gemini AI for smart culinary advice, nutritional insights, and pairing suggestions.",
+  "requestFramePermissions": []
+}
