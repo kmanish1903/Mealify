@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMealById, getIngredients } from '../services/mealDb';
+import { searchYouTubeVideo } from '../services/youtube';
 import { Meal } from '../types';
-import { ArrowLeft, PlayCircle, Heart, Share2, Sparkles, MapPin, List, Check } from 'lucide-react';
+import { ArrowLeft, PlayCircle, Heart, Share2, Sparkles, MapPin, List, Check, Loader2 } from 'lucide-react';
 import { useFavorites } from '../hooks/useFavorites';
 import ChefAssistant from '../components/ChefAssistant';
 
@@ -13,20 +14,54 @@ const RecipeDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const [isChefOpen, setIsChefOpen] = useState(false);
-  
-  // Interactive Checklist State
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  
+  // Video State
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      getMealById(id).then((data) => {
+    let mounted = true;
+    
+    const loadData = async () => {
+      if (!id) return;
+      
+      const data = await getMealById(id);
+      if (mounted && data) {
         setMeal(data);
         setLoading(false);
-      });
-    }
+
+        // Handle Video Logic
+        let vidId = null;
+        if (data.strYoutube) {
+           // Extract from direct URL
+           const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+           const match = data.strYoutube.match(regExp);
+           if (match && match[2].length === 11) {
+             vidId = match[2];
+           }
+        }
+        
+        // Fallback: Search YouTube if no ID found
+        if (!vidId) {
+           vidId = await searchYouTubeVideo(data.strMeal);
+        }
+        
+        if (mounted) {
+            setVideoId(vidId);
+            setVideoLoading(false);
+        }
+      } else if (mounted) {
+          setLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => { mounted = false; };
   }, [id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-orange-500" size={40} /></div>;
   if (!meal) return <div className="text-center py-20 text-xl font-serif">Recipe not found</div>;
 
   const ingredients = getIngredients(meal);
@@ -46,7 +81,7 @@ const RecipeDetail: React.FC = () => {
       }).catch(console.error);
     } else {
         navigator.clipboard.writeText(window.location.href);
-        // Could add a toast here
+        alert('Link copied to clipboard');
     }
   };
 
@@ -60,16 +95,8 @@ const RecipeDetail: React.FC = () => {
     setCheckedIngredients(next);
   };
 
-  const getYoutubeId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
-
-  const youtubeId = meal.strYoutube ? getYoutubeId(meal.strYoutube) : null;
-
   return (
-    <div className="animate-fade-in pb-16">
+    <div className="animate-fade-in pb-20">
       {/* Back Button */}
       <button 
         onClick={() => navigate(-1)}
@@ -226,17 +253,25 @@ const RecipeDetail: React.FC = () => {
            </div>
 
            {/* Video Embed */}
-           {youtubeId && (
+           {videoId && (
               <div className="rounded-[2.5rem] overflow-hidden shadow-2xl aspect-video border-4 border-white dark:border-gray-800 bg-black">
                 <iframe 
                   width="100%" 
                   height="100%" 
-                  src={`https://www.youtube.com/embed/${youtubeId}`} 
+                  src={`https://www.youtube.com/embed/${videoId}`} 
                   title="YouTube video player" 
                   frameBorder="0" 
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                   allowFullScreen
                 ></iframe>
+              </div>
+           )}
+           
+           {/* Loading State for Video Search */}
+           {videoLoading && !videoId && !meal.strYoutube && (
+              <div className="rounded-[2.5rem] overflow-hidden shadow-inner aspect-video bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center gap-2">
+                 <Loader2 className="animate-spin text-orange-500" size={32} />
+                 <p className="text-sm text-gray-500">Searching for cooking video...</p>
               </div>
            )}
         </div>
